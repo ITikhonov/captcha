@@ -5,40 +5,56 @@
 
 #include "f.h"
 
-unsigned char im[50*160];
+unsigned char im[50*200];
 
 int writegif() {
 	write(1,"GIF89a",6);
-	write(1,"\xa0\0\x32\0",4); // widthxheight
-	write(1,"\x80",1); // GCT:0:0:0
+	write(1,"\xc8\0\x32\0",4); // widthxheight
+	write(1,"\x87",1); // GCT:0:0:7
 	write(1,"\0\0",2); // bgcolor + aspect
-	write(1,"\0\0\0\xff\xff\xff",6); // GCT
+
+	int ci;
+	for(ci=0;ci<256;ci++) { // GCT
+		write(1,&ci,1);
+		write(1,&ci,1);
+		write(1,&ci,1);
+	}
 
 	
 	write(1,",",1); // Image Separator
 	write(1,"\0\0\0\0",4); // left x top
-	write(1,"\xa0\0\x32\0",4); // widthxheight
+	write(1,"\xc8\0\x32\0",4); // widthxheight
 	write(1,"\0",1); // Flags
 
-	write(1,"\x02",1); // LZW code size
+	write(1,"\x08",1); // LZW code size
 
 
 	int x,y;
 	unsigned char *i=im;
 	for(y=0;y<50;y++) {
-		write(1,"\x78",1); // Data length 160/4*3=120
-		for(x=0;x<160;x+=4)
-		{
-			unsigned char o[3];
-			o[0]=4|((i[0]&1)<<3); // 0000b100
-			o[1]=0x41|((i[1]&1)<<1)|((i[2]&1)<<7); // b10000b1
-			o[2]=0x10|((i[3]&1)<<5); // 00b10000
-			write(1,o,3);
-			i+=4;
+		int n;
+		for(n=0;n<2;n++) {
+			write(1,"\xe1",1); // Data length 9*25=225
+			for(x=0;x<25;x++)
+			{
+				unsigned char o[9];
+
+				o[0]=0;			// 00000000
+				o[1]=1|(i[0]<<1);	// bbbbbbb1
+				o[2]=i[0]>>7;		// 000000xb
+				o[3]=4|(i[1]<<3);	// bbbbb100
+				o[4]=i[1]>>5;		// 0000xbbb
+				o[5]=16|(i[2]<<5);	// bbb10000
+				o[6]=i[2]>>3;		// 00xbbbbb
+				o[7]=64|(i[3]<<7);	// b1000000
+				o[8]=i[3]>>1;		//xbbbbbbb
+				write(1,o,9);
+				i+=4;
+			}
 		}
 	}
-	write(1,"\x01",1); // Data length
-	write(1,"\x05",1); // End of LZW
+	write(1,"\x02",1); // Data length
+	write(1,"\x01\x01",2); // End of LZW
 	write(1,"\x00",1); // Terminator
 	write(1,";",1); // GIF End
 }
@@ -47,13 +63,13 @@ char sw[]={0, 4, 9, 14, 19, 23, 28, 33, 37, 42, 46, 51, 55, 59, 64, 68, 72, 76, 
 
 int letter(int n, int pos, int dx, int dy) {
 	char w=0, *p=lt[n];
-	unsigned char *r=im+160*15+pos*25+30;
+	unsigned char *r=im+200*15+pos*25+30;
 	unsigned char *i=r;
 	for(;*p!=-2;p++) {
-		if(*p==-1) { r+=160; i=r; w=0; continue; }
+		if(*p==-1) { r+=200; i=r; w=0; continue; }
 		int j,s=0; for(j=0;j<*p;j++) {
 			s+=dx;
-			i[j+(s/1024)*160]&=w;
+			i[j+(s/1024)*200]&=w?255:0;
 		}
 		i+=*p;
 		w=!w;
@@ -64,16 +80,20 @@ int letter(int n, int pos, int dx, int dy) {
 #define X(x) ((x>>8)&0xff)
 
 int main() {
-	uint32_t r[4];
+	uint32_t r[5];
+
 	int f=open("/dev/urandom",O_RDONLY);
-	read(f,r,4*4);
+	read(f,r,5*4);
+	read(f,im,200*50);
 	close(f);
 
-	memset(im,1,160*50);
+	memset(im,255,200*50);
+
 	letter(L(r[0]),0,X(r[0]),0);
 	letter(L(r[1]),1,X(r[1]),0);
 	letter(L(r[2]),2,X(r[2]),0);
 	letter(L(r[3]),3,X(r[3]),0);
+	letter(L(r[4]),4,X(r[4]),0);
 	
 	writegif();
 }
