@@ -1,4 +1,3 @@
-CFLAGS=-g
 
 all: a.gif
 
