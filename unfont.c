@@ -1,30 +1,47 @@
 #include <stdio.h>
-
 #include "font.h"
 
 void copy(int s, int e, int idx) {
-	printf("char lt%u[] = {",idx);
-	int r;
-	for(r=5;r<28;r++) {
-		char w='.';
-		int i=s,last=s;
-		for(;;) {
-			while(im[r][i]==w) { i++; if(i==e) goto re; }
-			printf("%u,",i-last); last=i;
-			w=w=='.'?' ':'.';
+	int r,i;
+	for(i=s;i<e;i++) {
+		for(r=0;r<50;r++) {
+			if(im[r][i]!=' ') goto findend;
 		}
-		re:
-			if(w=='.') printf("%u,",i-last);
-			printf("-1,");
 	}
-	printf(" -2};\n");
+
+	findend: s=i;
+
+	for(i=e;i>s;i--) {
+		for(r=0;r<50;r++) {
+			if(im[r][i]!=' ') goto go;
+		}
+	}
+
+	go: e=i+1;
+
+	printf("char lt%u[]={",idx);
+
+	for(r=0;r<50;r++) {
+		int l=0;
+		for(i=s;i<e;i++) {
+			char c=im[r][i];
+			if(c==' ') { l++; }
+			else {
+				if(l) { printf("-%u,",l); l=0; }
+				printf("%u,",colors[c-'a']);
+			}
+		}
+		printf("-100,\n");
+	}
+	printf("-101};\n");
+
 }
 
 int main() {
-	int i,st=0,idx=-1;
+	int i,st=0,idx=0;
 	for(i=0;i<width;i++) {
-		if(im[0][i]=='.') {
-			if(idx>=0) copy(st,i,idx);
+		if(im[0][i]=='a') {
+			copy(st+1,i-1,idx);
 			idx++;
 			st=i;
 		}
@@ -32,9 +49,10 @@ int main() {
 
 	printf("char *lt[]={\n");
 	for(i=0;i<idx;i++) {
-		printf("    lt%d,\n",i);
+		printf("    lt%d,\n",i==6?0:i);
 	}
 	printf("};\n\n");
+	return 0;
 }
 
 
