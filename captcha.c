@@ -69,7 +69,7 @@ uint8_t s1;
 
 #define MAX(x,y) ((x>y)?(x):(y))
 
-int letter(int n, int pos, int x1, int x2) {
+int letter(int n, int pos) {
 	char *p=lt[n];
 	unsigned char *r=im+200*16+pos;
 	unsigned char *i=r;
@@ -106,7 +106,6 @@ void line() {
 		if(sk1>=200) sk1=sk1%200;
 		int skew=sw[sk1]/16;
 		sk1+=swr[x]&0x3+1;
-		fprintf(stderr,"%d ",skew);
 		unsigned char *i= im+(200*(45+skew)+x);
 		i[0]=0; i[1]=0; i[200]=0; i[201]=0;
 	}
@@ -140,39 +139,46 @@ void blur() {
 	}
 }
 
-
-#define L(x) ((x&0xff)%25)
-#define X1(x) ((x>>8)&0x7f)
-#define X2(x) ((x>>16)&0x7f)
-
-
+char *letters="abcdefahijklmnopqrstuvwxyz";
 
 int main() {
-	uint32_t r[5];
+	unsigned char l[5];
 
 	int f=open("/dev/urandom",O_RDONLY);
-	read(f,r,5*4);
+	read(f,l,5);
 	read(f,swr,200);
 	read(f,dr,sizeof(dr));
 	read(f,&s1,1);
 	close(f);
 
 	s1=s1&0x7f;
+	l[0]%=25;
+	l[1]%=25;
+	l[2]%=25;
+	l[3]%=25;
+	l[4]%=25;
 
 	memset(im,0xf0,200*70);
 
 	int p=30;
-	p=letter(L(r[0]),p,X1(r[0]),X2(r[0]));
-	p=letter(L(r[1]),p,X1(r[1]),0);
-	p=letter(L(r[2]),p,X1(r[2]),0);
-	p=letter(L(r[3]),p,X1(r[3]),0);
-	letter(L(r[4]),p,X1(r[4]),0);
+	p=letter(l[0],p);
+	p=letter(l[1],p);
+	p=letter(l[2],p);
+	p=letter(l[3],p);
+	  letter(l[4],p);
 
 	line();
 	dots();
 	blur();
 	
 	writegif();
+
+	l[0]=letters[l[0]];
+	l[1]=letters[l[1]];
+	l[2]=letters[l[2]];
+	l[3]=letters[l[3]];
+	l[4]=letters[l[4]];
+	write(2,l,5);
 	return 0;
 }
 
