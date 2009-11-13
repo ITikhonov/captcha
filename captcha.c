@@ -65,7 +65,7 @@ char sw[200]={0, 4, 8, 12, 16, 20, 23, 27, 31, 35, 39, 43, 47, 50, 54, 58, 61, 6
 
 unsigned char swr[200];
 
-uint8_t s1;
+uint8_t s1,s2;
 
 #define MAX(x,y) ((x>y)?(x):(y))
 
@@ -74,10 +74,12 @@ int letter(int n, int pos) {
 	unsigned char *r=im+200*16+pos;
 	unsigned char *i=r;
 	int sk1=s1+pos;
+	int sk2=s2+pos;
 	int mpos=pos;
+	int row=0;
 	for(;*p!=-101;p++) {
 		if(*p<0) {
-			if(*p==-100) { r+=200; i=r; sk1=s1+pos; continue; }
+			if(*p==-100) { r+=200; i=r; sk1=s1+pos; row++; continue; }
 			i+=-*p;
 			continue;
 		}
@@ -86,7 +88,11 @@ int letter(int n, int pos) {
 		int skew=sw[sk1]/16;
 		sk1+=(swr[pos+i-r]&0x1)+1;
 
-		unsigned char *x=i+skew*200;
+		if(sk2>=200) sk2=sk2%200;
+		int skewh=sw[sk2]/70;
+		sk2+=(swr[row]&0x1);
+
+		unsigned char *x=i+skew*200+skewh;
 		mpos=MAX(mpos,pos+i-r);
 		
 		if((x-im)<70*200) *x=(*p)<<4;
@@ -149,9 +155,12 @@ int main() {
 	read(f,swr,200);
 	read(f,dr,sizeof(dr));
 	read(f,&s1,1);
+	read(f,&s2,1);
 	close(f);
 
 	s1=s1&0x7f;
+	s2=s2&0x3f;
+
 	l[0]%=25;
 	l[1]%=25;
 	l[2]%=25;
