@@ -7,30 +7,15 @@
 
 #include "f.h"
 
-unsigned char im[70*200];
-
-int writegif() {
-	write(1,"GIF89a",6);
-	write(1,"\xc8\0\x46\0",4); // widthxheight
-	write(1,"\x87",1); // GCT:0:0:7
-	write(1,"\0\0",2); // bgcolor + aspect
-
-	int ci;
-	for(ci=0;ci<256;ci++) { // GCT
-		write(1,&ci,1);
-		write(1,&ci,1);
-		write(1,&ci,1);
-	}
+int writegif(unsigned char im[70*200]) {
+	write(1,"GIF89a" "\xc8\0\x46\0" "\x87" "\0\0", 13); // tag ; widthxheight ; GCT:0:0:7 ; bgcolor + aspect
+	int ci; for(ci=0;ci<256;ci++) { write(1,&ci,1); write(1,&ci,1); write(1,&ci,1); } // GCT
 
 	
-	write(1,",",1); // Image Separator
-	write(1,"\0\0\0\0",4); // left x top
-	write(1,"\xc8\0\x46\0",4); // widthxheight
-	write(1,"\0",1); // Flags
+	write(1,"," "\0\0\0\0" "\xc8\0\x46\0" "\0",10);
+// Image Separator // left x top // widthxheight // Flags
 
 	write(1,"\x08",1); // LZW code size
-
-
 	int x,y;
 	unsigned char *i=im;
 	for(y=0;y<70;y++) {
@@ -61,15 +46,12 @@ int writegif() {
 	write(1,";",1); // GIF End
 }
 
-char sw[200]={0, 4, 8, 12, 16, 20, 23, 27, 31, 35, 39, 43, 47, 50, 54, 58, 61, 65, 68, 71, 75, 78, 81, 84, 87, 90, 93, 96, 98, 101, 103, 105, 108, 110, 112, 114, 115, 117, 119, 120, 121, 122, 123, 124, 125, 126, 126, 127, 127, 127, 127, 127, 127, 127, 126, 126, 125, 124, 123, 122, 121, 120, 119, 117, 115, 114, 112, 110, 108, 105, 103, 101, 98, 96, 93, 90, 87, 84, 81, 78, 75, 71, 68, 65, 61, 58, 54, 50, 47, 43, 39, 35, 31, 27, 23, 20, 16, 12, 8, 4, 0, -4, -8, -12, -16, -20, -23, -27, -31, -35, -39, -43, -47, -50, -54, -58, -61, -65, -68, -71, -75, -78, -81, -84, -87, -90, -93, -96, -98, -101, -103, -105, -108, -110, -112, -114, -115, -117, -119, -120, -121, -122, -123, -124, -125, -126, -126, -127, -127, -127, -127, -127, -127, -127, -126, -126, -125, -124, -123, -122, -121, -120, -119, -117, -115, -114, -112, -110, -108, -105, -103, -101, -98, -96, -93, -90, -87, -84, -81, -78, -75, -71, -68, -65, -61, -58, -54, -50, -47, -43, -39, -35, -31, -27, -23, -20, -16, -12, -8, -4};
+static const char sw[200]={0, 4, 8, 12, 16, 20, 23, 27, 31, 35, 39, 43, 47, 50, 54, 58, 61, 65, 68, 71, 75, 78, 81, 84, 87, 90, 93, 96, 98, 101, 103, 105, 108, 110, 112, 114, 115, 117, 119, 120, 121, 122, 123, 124, 125, 126, 126, 127, 127, 127, 127, 127, 127, 127, 126, 126, 125, 124, 123, 122, 121, 120, 119, 117, 115, 114, 112, 110, 108, 105, 103, 101, 98, 96, 93, 90, 87, 84, 81, 78, 75, 71, 68, 65, 61, 58, 54, 50, 47, 43, 39, 35, 31, 27, 23, 20, 16, 12, 8, 4, 0, -4, -8, -12, -16, -20, -23, -27, -31, -35, -39, -43, -47, -50, -54, -58, -61, -65, -68, -71, -75, -78, -81, -84, -87, -90, -93, -96, -98, -101, -103, -105, -108, -110, -112, -114, -115, -117, -119, -120, -121, -122, -123, -124, -125, -126, -126, -127, -127, -127, -127, -127, -127, -127, -126, -126, -125, -124, -123, -122, -121, -120, -119, -117, -115, -114, -112, -110, -108, -105, -103, -101, -98, -96, -93, -90, -87, -84, -81, -78, -75, -71, -68, -65, -61, -58, -54, -50, -47, -43, -39, -35, -31, -27, -23, -20, -16, -12, -8, -4};
 
-unsigned char swr[200];
-
-uint8_t s1,s2;
 
 #define MAX(x,y) ((x>y)?(x):(y))
 
-int letter(int n, int pos) {
+static int letter(int n, int pos, unsigned char im[70*200], unsigned char swr[200], uint8_t s1, uint8_t s2) {
 	char *p=lt[n];
 	unsigned char *r=im+200*16+pos;
 	unsigned char *i=r;
@@ -105,7 +87,7 @@ int letter(int n, int pos) {
 
 uint32_t dr[NDOTS];
 
-void line() {
+static void line(unsigned char im[70*200], unsigned char swr[200], uint8_t s1) {
 	int x;
 	int sk1=s1;
 	for(x=0;x<199;x++) {
@@ -117,7 +99,7 @@ void line() {
 	}
 }
 
-void dots() {
+static void dots(unsigned char im[70*200]) {
 	int n;
 	for(n=0;n<NDOTS;n++) {
 		uint32_t v=dr[n];
@@ -132,7 +114,7 @@ void dots() {
 	}
 }
 
-void blur() {
+static void blur(unsigned char im[70*200]) {
 	unsigned char *i=im;
 	int x,y;
 	for(y=0;y<68;y++) {
@@ -145,48 +127,29 @@ void blur() {
 	}
 }
 
-char *letters="abcdefahijklmnopqrstuvwxyz";
+static const char *letters="abcdefahijklmnopqrstuvwxyz";
 
-int main() {
-	unsigned char l[5];
+void captcha(unsigned char im[70*200], unsigned char l[6]) {
+	unsigned char swr[200];
+	uint8_t s1,s2;
 
 	int f=open("/dev/urandom",O_RDONLY);
-	read(f,l,5);
-	read(f,swr,200);
-	read(f,dr,sizeof(dr));
-	read(f,&s1,1);
-	read(f,&s2,1);
+	read(f,l,5); read(f,swr,200); read(f,dr,sizeof(dr)); read(f,&s1,1); read(f,&s2,1);
 	close(f);
 
-	s1=s1&0x7f;
-	s2=s2&0x3f;
+	memset(im,0xf0,200*70); s1=s1&0x7f; s2=s2&0x3f; l[0]%=25; l[1]%=25; l[2]%=25; l[3]%=25; l[4]%=25; l[5]=0;
+	int p=30; p=letter(l[0],p,im,swr,s1,s2); p=letter(l[1],p,im,swr,s1,s2); p=letter(l[2],p,im,swr,s1,s2); p=letter(l[3],p,im,swr,s1,s2); letter(l[4],p,im,swr,s1,s2);
+	line(im,swr,s1); dots(im); blur(im);
+	l[0]=letters[l[0]]; l[1]=letters[l[1]]; l[2]=letters[l[2]]; l[3]=letters[l[3]]; l[4]=letters[l[4]];
+}
 
-	l[0]%=25;
-	l[1]%=25;
-	l[2]%=25;
-	l[3]%=25;
-	l[4]%=25;
+int main() {
+	char l[6];
+	unsigned char im[70*200];
 
-	memset(im,0xf0,200*70);
+	captcha(im,l);
 
-	int p=30;
-	p=letter(l[0],p);
-	p=letter(l[1],p);
-	p=letter(l[2],p);
-	p=letter(l[3],p);
-	  letter(l[4],p);
-
-	line();
-	dots();
-	blur();
-	
-	writegif();
-
-	l[0]=letters[l[0]];
-	l[1]=letters[l[1]];
-	l[2]=letters[l[2]];
-	l[3]=letters[l[3]];
-	l[4]=letters[l[4]];
+	writegif(im);
 	write(2,l,5);
 	return 0;
 }
