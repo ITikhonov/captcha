@@ -31,7 +31,7 @@ void makegif(unsigned char im[70*200], unsigned char gif[gifsize]) {
 		"\xc0\xc0\xc0"
 		"\xd0\xd0\xd0"
 		"\xe0\xe0\xe0"
-		"\xf0\xf0\xf0"
+		"\xff\xff\xff"
 		"," "\0\0\0\0" "\xc8\0\x46\0" "\0" "\x04",13+48+10+1);
 
 	int x,y;
@@ -116,24 +116,21 @@ static void dots(unsigned char im[70*200]) {
 		uint32_t v=dr[n];
 		unsigned char *i=im+v%(200*67);
 		
-		i[0]=0xf0;
-		i[1]=0xf0;
-		i[2]=0xf0;
-		i[200]=0xf0;
-		i[201]=0xf0;
-		i[202]=0xf0;
+		i[0]=0xff;
+		i[1]=0xff;
+		i[2]=0xff;
+		i[200]=0xff;
+		i[201]=0xff;
+		i[202]=0xff;
 	}
 }
-
 static void blur(unsigned char im[70*200]) {
 	unsigned char *i=im;
 	int x,y;
 	for(y=0;y<68;y++) {
                for(x=0;x<198;x++) {
-                       unsigned int c11=*i,c12=i[1],c13=i[2],
-                           c21=i[200],c22=i[201],c23=i[202],
-                           c31=i[400],c32=i[402],c33=i[403];
-                       *i++=((c11+c12+c21+c22)/4);
+			unsigned int c11=*i,c12=i[1],c21=i[200],c22=i[201];
+			*i++=((c11+c12+c21+c22)/4);
                }
 	}
 }
@@ -148,7 +145,7 @@ void captcha(unsigned char im[70*200], unsigned char l[6]) {
 	read(f,l,5); read(f,swr,200); read(f,dr,sizeof(dr)); read(f,&s1,1); read(f,&s2,1);
 	close(f);
 
-	memset(im,0xf0,200*70); s1=s1&0x7f; s2=s2&0x3f; l[0]%=25; l[1]%=25; l[2]%=25; l[3]%=25; l[4]%=25; l[5]=0;
+	memset(im,0xff,200*70); s1=s1&0x7f; s2=s2&0x3f; l[0]%=25; l[1]%=25; l[2]%=25; l[3]%=25; l[4]%=25; l[5]=0;
 	int p=30; p=letter(l[0],p,im,swr,s1,s2); p=letter(l[1],p,im,swr,s1,s2); p=letter(l[2],p,im,swr,s1,s2); p=letter(l[3],p,im,swr,s1,s2); letter(l[4],p,im,swr,s1,s2);
 	line(im,swr,s1); dots(im); blur(im);
 	l[0]=letters[l[0]]; l[1]=letters[l[1]]; l[2]=letters[l[2]]; l[3]=letters[l[3]]; l[4]=letters[l[4]];
