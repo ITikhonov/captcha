@@ -43,11 +43,11 @@ void makegif(unsigned char im[70*200], unsigned char gif[gifsize]) {
 		{
 			unsigned char a=i[0]>>4,b=i[1]>>4,c=i[2]>>4,d=i[3]>>4;
 
-			p[0]=0b10000|(a<<5);			// bbb10000
-			p[1]=(a>>3)|0b1000000|(b<<7);	// b10000xb
+			p[0]=16|(a<<5);			// bbb10000
+			p[1]=(a>>3)|64|(b<<7);	// b10000xb
 			p[2]=b>>1;			// 0000xbbb
 			p[3]=1|(c<<1);		// 00xbbbb1
-			p[4]=0b100|(d<<3);		// xbbbb100
+			p[4]=4|(d<<3);		// xbbbb100
 			i+=4;
 			p+=5;
 		}
