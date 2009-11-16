@@ -29,4 +29,4 @@ clean:
 
 
 publish: clean
-	$(MAKE) VERSION="$(shell date -I) (git: $(shell git show-ref --verify --hash refs/heads/master))" all
+	$(MAKE) VERSION="$(shell date -I) (http://github.com/ITikhonov/captcha/tree/$(shell git show-ref --verify --hash refs/heads/master))" all
