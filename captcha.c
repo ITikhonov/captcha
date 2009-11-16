@@ -1,17 +1,22 @@
+
+const int gifsize;
+void captcha(unsigned char im[70*200], unsigned char l[6]);
+void makegif(unsigned char im[70*200], unsigned char gif[gifsize]);
+
 #include <unistd.h>
 #include <stdint.h>
 #include <fcntl.h>
 #include <string.h>
 
-#include <stdio.h>
+static char *lt[];
+const int gifsize=17646;
 
-#include "f.h"
-
-int writegif(unsigned char im[70*200]) {
-	write(1,"GIF89a" "\xc8\0\x46\0" "\x83" "\0\0", 13); // tag ; widthxheight ; GCT:0:0:7 ; bgcolor + aspect
-
-	// GCT
-	write(1,"\x00\x00\x00"
+void makegif(unsigned char im[70*200], unsigned char gif[gifsize]) {
+ 	// tag ; widthxheight ; GCT:0:0:7 ; bgcolor + aspect // GCT
+ 	// Image Separator // left x top // widthxheight // Flags
+	// LZW code size
+	memcpy(gif,"GIF89a" "\xc8\0\x46\0" "\x83" "\0\0"
+		"\x00\x00\x00"
 		"\x10\x10\x10"
 		"\x20\x20\x20"
 		"\x30\x30\x30"
@@ -26,32 +31,30 @@ int writegif(unsigned char im[70*200]) {
 		"\xc0\xc0\xc0"
 		"\xd0\xd0\xd0"
 		"\xe0\xe0\xe0"
-		"\xf0\xf0\xf0",48);
+		"\xf0\xf0\xf0"
+		"," "\0\0\0\0" "\xc8\0\x46\0" "\0" "\x04",13+48+10+1);
 
-	write(1,"," "\0\0\0\0" "\xc8\0\x46\0" "\0",10); // Image Separator // left x top // widthxheight // Flags
-
-	write(1,"\x04",1); // LZW code size
 	int x,y;
 	unsigned char *i=im;
+	unsigned char *p=gif+13+48+10+1;
 	for(y=0;y<70;y++) {
-		write(1,"\xfa",1); // Data length 5*50=250
+		*p++=250; // Data length 5*50=250
 		for(x=0;x<50;x++)
 		{
-			unsigned char o[5],a=i[0]>>4,b=i[1]>>4,c=i[2]>>4,d=i[3]>>4;
+			unsigned char a=i[0]>>4,b=i[1]>>4,c=i[2]>>4,d=i[3]>>4;
 
-			o[0]=0b10000|(a<<5);			// bbb10000
-			o[1]=(a>>3)|0b1000000|(b<<7);	// b10000xb
-			o[2]=b>>1;			// 0000xbbb
-			o[3]=1|(c<<1);		// 00xbbbb1
-			o[4]=0b100|(d<<3);		// xbbbb100
-			write(1,o,5);
+			p[0]=0b10000|(a<<5);			// bbb10000
+			p[1]=(a>>3)|0b1000000|(b<<7);	// b10000xb
+			p[2]=b>>1;			// 0000xbbb
+			p[3]=1|(c<<1);		// 00xbbbb1
+			p[4]=0b100|(d<<3);		// xbbbb100
 			i+=4;
+			p+=5;
 		}
 	}
-	write(1,"\x01",1); // Data length
-	write(1,"\x11",1); // End of LZW (b10001)
-	write(1,"\x00",1); // Terminator
-	write(1,";",1); // GIF End
+
+ 	// Data length // End of LZW (b10001) // Terminator // GIF End
+	memcpy(gif+gifsize-4,"\x01" "\x11" "\x00" ";",4);
 }
 
 static const char sw[200]={0, 4, 8, 12, 16, 20, 23, 27, 31, 35, 39, 43, 47, 50, 54, 58, 61, 65, 68, 71, 75, 78, 81, 84, 87, 90, 93, 96, 98, 101, 103, 105, 108, 110, 112, 114, 115, 117, 119, 120, 121, 122, 123, 124, 125, 126, 126, 127, 127, 127, 127, 127, 127, 127, 126, 126, 125, 124, 123, 122, 121, 120, 119, 117, 115, 114, 112, 110, 108, 105, 103, 101, 98, 96, 93, 90, 87, 84, 81, 78, 75, 71, 68, 65, 61, 58, 54, 50, 47, 43, 39, 35, 31, 27, 23, 20, 16, 12, 8, 4, 0, -4, -8, -12, -16, -20, -23, -27, -31, -35, -39, -43, -47, -50, -54, -58, -61, -65, -68, -71, -75, -78, -81, -84, -87, -90, -93, -96, -98, -101, -103, -105, -108, -110, -112, -114, -115, -117, -119, -120, -121, -122, -123, -124, -125, -126, -126, -127, -127, -127, -127, -127, -127, -127, -126, -126, -125, -124, -123, -122, -121, -120, -119, -117, -115, -114, -112, -110, -108, -105, -103, -101, -98, -96, -93, -90, -87, -84, -81, -78, -75, -71, -68, -65, -61, -58, -54, -50, -47, -43, -39, -35, -31, -27, -23, -20, -16, -12, -8, -4};
@@ -151,14 +154,22 @@ void captcha(unsigned char im[70*200], unsigned char l[6]) {
 	l[0]=letters[l[0]]; l[1]=letters[l[1]]; l[2]=letters[l[2]]; l[3]=letters[l[3]]; l[4]=letters[l[4]];
 }
 
+#ifdef CAPTCHA
+
 int main() {
 	char l[6];
 	unsigned char im[70*200];
+	unsigned char gif[gifsize];
 
 	captcha(im,l);
+	makegif(im,gif);
 
-	writegif(im);
+	write(1,gif,gifsize);
 	write(2,l,5);
+
 	return 0;
 }
 
+#endif
+
+#include "f.h"

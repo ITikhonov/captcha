@@ -19,7 +19,7 @@ void copy(int s, int e, int idx) {
 
 	go: e=i+1;
 
-	printf("char lt%u[]={",idx);
+	printf("static char lt%u[]={",idx);
 
 	for(r=0;r<50;r++) {
 		int l=0;
@@ -31,7 +31,7 @@ void copy(int s, int e, int idx) {
 				printf("%u,",colors[c-'a']);
 			}
 		}
-		printf("-100,\n");
+		printf("-100,");
 	}
 	printf("-101};\n");
 
@@ -47,9 +47,9 @@ int main() {
 		}
 	}
 
-	printf("char *lt[]={\n");
+	printf("static char *lt[]={");
 	for(i=0;i<idx;i++) {
-		printf("    lt%d,\n",i==6?0:i);
+		printf("lt%d,",i==6?0:i);
 	}
 	printf("};\n\n");
 	return 0;
