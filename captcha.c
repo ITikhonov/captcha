@@ -8,40 +8,48 @@
 #include "f.h"
 
 int writegif(unsigned char im[70*200]) {
-	write(1,"GIF89a" "\xc8\0\x46\0" "\x87" "\0\0", 13); // tag ; widthxheight ; GCT:0:0:7 ; bgcolor + aspect
-	int ci; for(ci=0;ci<256;ci++) { write(1,&ci,1); write(1,&ci,1); write(1,&ci,1); } // GCT
+	write(1,"GIF89a" "\xc8\0\x46\0" "\x83" "\0\0", 13); // tag ; widthxheight ; GCT:0:0:7 ; bgcolor + aspect
 
-	
-	write(1,"," "\0\0\0\0" "\xc8\0\x46\0" "\0",10);
-// Image Separator // left x top // widthxheight // Flags
+	// GCT
+	write(1,"\x00\x00\x00"
+		"\x10\x10\x10"
+		"\x20\x20\x20"
+		"\x30\x30\x30"
+		"\x40\x40\x40"
+		"\x50\x50\x50"
+		"\x60\x60\x60"
+		"\x70\x70\x70"
+		"\x80\x80\x80"
+		"\x90\x90\x90"
+		"\xa0\xa0\xa0"
+		"\xb0\xb0\xb0"
+		"\xc0\xc0\xc0"
+		"\xd0\xd0\xd0"
+		"\xe0\xe0\xe0"
+		"\xf0\xf0\xf0",48);
 
-	write(1,"\x08",1); // LZW code size
+	write(1,"," "\0\0\0\0" "\xc8\0\x46\0" "\0",10); // Image Separator // left x top // widthxheight // Flags
+
+	write(1,"\x04",1); // LZW code size
 	int x,y;
 	unsigned char *i=im;
 	for(y=0;y<70;y++) {
-		int n;
-		for(n=0;n<2;n++) {
-			write(1,"\xe1",1); // Data length 9*25=225
-			for(x=0;x<25;x++)
-			{
-				unsigned char o[9];
+		write(1,"\xfa",1); // Data length 5*50=250
+		for(x=0;x<50;x++)
+		{
+			unsigned char o[5],a=i[0]>>4,b=i[1]>>4,c=i[2]>>4,d=i[3]>>4;
 
-				o[0]=0;			// 00000000
-				o[1]=1|(i[0]<<1);	// bbbbbbb1
-				o[2]=i[0]>>7;		// 000000xb
-				o[3]=4|(i[1]<<3);	// bbbbb100
-				o[4]=i[1]>>5;		// 0000xbbb
-				o[5]=16|(i[2]<<5);	// bbb10000
-				o[6]=i[2]>>3;		// 00xbbbbb
-				o[7]=64|(i[3]<<7);	// b1000000
-				o[8]=i[3]>>1;		//xbbbbbbb
-				write(1,o,9);
-				i+=4;
-			}
+			o[0]=0b10000|(a<<5);			// bbb10000
+			o[1]=(a>>3)|0b1000000|(b<<7);	// b10000xb
+			o[2]=b>>1;			// 0000xbbb
+			o[3]=1|(c<<1);		// 00xbbbb1
+			o[4]=0b100|(d<<3);		// xbbbb100
+			write(1,o,5);
+			i+=4;
 		}
 	}
-	write(1,"\x02",1); // Data length
-	write(1,"\x01\x01",2); // End of LZW
+	write(1,"\x01",1); // Data length
+	write(1,"\x11",1); // End of LZW (b10001)
 	write(1,"\x00",1); // Terminator
 	write(1,";",1); // GIF End
 }
@@ -119,10 +127,10 @@ static void blur(unsigned char im[70*200]) {
 	int x,y;
 	for(y=0;y<68;y++) {
                for(x=0;x<198;x++) {
-                       int c11=*i,c12=i[1],c13=i[2],
+                       unsigned int c11=*i,c12=i[1],c13=i[2],
                            c21=i[200],c22=i[201],c23=i[202],
                            c31=i[400],c32=i[402],c33=i[403];
-                       *i++=((c11+c12+c21+c22)/4)&0xf0;
+                       *i++=((c11+c12+c21+c22)/4);
                }
 	}
 }
