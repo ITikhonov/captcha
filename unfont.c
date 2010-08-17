@@ -19,7 +19,7 @@ void copy(int s, int e, int idx) {
 
 	go: e=i+1;
 
-	printf("static char lt%u[]={",idx);
+	printf("static int8_t lt%u[]={",idx);
 
 	for(r=0;r<50;r++) {
 		int l=0;
@@ -47,7 +47,7 @@ int main() {
 		}
 	}
 
-	printf("static char *lt[]={");
+	printf("static int8_t *lt[]={");
 	for(i=0;i<idx;i++) {
 		printf("lt%d,",i==6?0:i);
 	}
