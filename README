@@ -16,8 +16,8 @@ Version: 2010-08-18 (git:d67c75a)
 Download: libcaptcha.c (32k)
 Github: http://github.com/ITikhonov/captcha
 Build: gcc -DCAPTCHA -o captcha libcaptcha.c
-Usage: ./captcha > captcha.gif 2> letters.txt
-Example: ~/captcha$ ./captcha > captcha.gif
+Usage: ./captcha captcha.gif
+Example: ~/captcha$ ./captcha captcha.gif
 
 If you want to use it as a library compile libcaptcha.o and add it
 to linker:
