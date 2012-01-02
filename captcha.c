@@ -182,6 +182,7 @@ int main(int argc, char *argv[]) {
 
 	write(outfile,gif,gifsize);
 	write(2,l,5);
+	write(2,"\n",1);
 
 	if (outfile != 1) {
 		close(outfile);
