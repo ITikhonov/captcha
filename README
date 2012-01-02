@@ -1,0 +1,63 @@
+CAPTCHA library - anti-bot image generator
+
+Small portable CAPTCHA images generator library without dependencies.
+
+Please, note that this toy captcha is easily beaten by OCR
+
+It generates 200x70 images in style of reCAPTCHA ones with five random
+lower case letters. Instead of letter 'g' letter 'a' substituted.
+
+Library includes GIF generation function.
+
+Program included writes GIF image to stdout and letters generated
+to stderr.
+
+Version: 2010-08-18 (git:d67c75a)
+Download: libcaptcha.c (32k)
+Github: http://github.com/ITikhonov/captcha
+Build: gcc -DCAPTCHA -o captcha libcaptcha.c
+Usage: ./captcha > captcha.gif 2> letters.txt
+Example: ~/captcha$ ./captcha > captcha.gif
+
+If you want to use it as a library compile libcaptcha.o and add it
+to linker:
+
+   gcc -c libcaptcha.c gcc -o myprog myprog.o libcaptcha.o
+
+Functions and constants exported:
+
+const int gifsize; — makegif function will generate GIF of that size.
+
+void captcha(unsigned char im[70*200], unsigned char l[6]); — fills
+buffer: im with greyscale 1-byte pixels for 200x70 image; l with five
+letters generated and trailing zero byte.
+
+void makegif(unsigned char im[70*200], unsigned char gif[gifsize]); -
+write GIF image of pixels from im to gif buffer. Image is always exactly
+that gifsize (17646) bytes long.
+
+Here is a complete example of usage:
+
+const int gifsize;
+void captcha(unsigned char im[70*200], unsigned char l[6]);
+void makegif(unsigned char im[70*200], unsigned char gif[gifsize]);
+
+int main() {
+	char l[6]; unsigned char im[70*200]; unsigned char gif[gifsize];
+
+	captcha(im,l); makegif(im,gif);
+
+	write(1,gif,gifsize); write(2,l,5);
+
+	return 0;
+}
+
+Compile it with:
+
+gcc -o test test.c libcaptcha.c
+
+Letters are generated from a sample image of free HPLHS OldStyle font
+taken from dafont.com
+
+Thanks to Martin Townsend who fixed segfaults on ARM platform due to
+some chars not being int8_t's.
