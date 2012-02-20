@@ -156,7 +156,7 @@ static void filter(unsigned char im[70*200]) {
 	memmove(im,om,sizeof(om));
 }
 
-static const char *letters="abcdzfahijklmnopqrstuvwxyz";
+static const char *letters="abcdafahijklmnopqrstuvwxyz";
 
 void captcha(unsigned char im[70*200], unsigned char l[6]) {
 	unsigned char swr[200];
