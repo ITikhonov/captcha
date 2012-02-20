@@ -91,7 +91,7 @@ static int letter(int n, int pos, unsigned char im[70*200], unsigned char swr[20
 		if((x-im)<70*200) *x=(*p)<<4;
 		i++;
 	}
-	return mpos-1+3;
+	return mpos;
 }
 
 #define NDOTS 100
