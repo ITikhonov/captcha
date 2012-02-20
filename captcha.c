@@ -91,7 +91,7 @@ static int letter(int n, int pos, unsigned char im[70*200], unsigned char swr[20
 		if((x-im)<70*200) *x=(*p)<<4;
 		i++;
 	}
-	return mpos-1;
+	return mpos-1+3;
 }
 
 #define NDOTS 100
@@ -135,7 +135,28 @@ static void blur(unsigned char im[70*200]) {
 	}
 }
 
-static const char *letters="abcdefahijklmnopqrstuvwxyz";
+static void filter(unsigned char im[70*200]) {
+	unsigned char om[70*200];
+	unsigned char *i=im;
+	unsigned char *o=om;
+
+	memset(om,0xff,sizeof(om));
+
+	int x,y;
+	for(y=0;y<70;y++) {
+		for(x=4;x<200-4;x++) {
+			if(i[0]>0xf0 && i[1]<0xf0) { o[0]=0; o[1]=0; }
+			else if(i[0]<0xf0 && i[1]>0xf0) { o[0]=0; o[1]=0; }
+
+			i++;
+			o++;
+		}
+	}
+
+	memmove(im,om,sizeof(om));
+}
+
+static const char *letters="abcdzfahijklmnopqrstuvwxyz";
 
 void captcha(unsigned char im[70*200], unsigned char l[6]) {
 	unsigned char swr[200];
@@ -147,7 +168,7 @@ void captcha(unsigned char im[70*200], unsigned char l[6]) {
 
 	memset(im,0xff,200*70); s1=s1&0x7f; s2=s2&0x3f; l[0]%=25; l[1]%=25; l[2]%=25; l[3]%=25; l[4]%=25; l[5]=0;
 	int p=30; p=letter(l[0],p,im,swr,s1,s2); p=letter(l[1],p,im,swr,s1,s2); p=letter(l[2],p,im,swr,s1,s2); p=letter(l[3],p,im,swr,s1,s2); letter(l[4],p,im,swr,s1,s2);
-	line(im,swr,s1); dots(im); blur(im);
+	dots(im); blur(im); filter(im); line(im,swr,s1); 
 	l[0]=letters[l[0]]; l[1]=letters[l[1]]; l[2]=letters[l[2]]; l[3]=letters[l[3]]; l[4]=letters[l[4]];
 }
 

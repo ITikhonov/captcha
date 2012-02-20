@@ -49,7 +49,7 @@ int main() {
 
 	printf("static int8_t *lt[]={");
 	for(i=0;i<idx;i++) {
-		printf("lt%d,",i==6?0:i);
+		printf("lt%d,",(i==6||i==4)?0:i);
 	}
 	printf("};\n\n");
 	return 0;
