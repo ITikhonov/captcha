@@ -3,8 +3,11 @@ const int gifsize;
 void captcha(unsigned char im[70*200], unsigned char l[6]);
 void makegif(unsigned char im[70*200], unsigned char gif[gifsize]);
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
 
@@ -87,7 +90,7 @@ static int letter(int n, int pos, unsigned char im[70*200], unsigned char swr[20
 
 		unsigned char *x=i+skew*200+skewh;
 		mpos=MAX(mpos,pos+i-r);
-		
+
 		if((x-im)<70*200) *x=(*p)<<4;
 		i++;
 	}
@@ -115,7 +118,7 @@ static void dots(unsigned char im[70*200]) {
 	for(n=0;n<NDOTS;n++) {
 		uint32_t v=dr[n];
 		unsigned char *i=im+v%(200*67);
-		
+
 		i[0]=0xff;
 		i[1]=0xff;
 		i[2]=0xff;
@@ -174,7 +177,23 @@ void captcha(unsigned char im[70*200], unsigned char l[6]) {
 
 #ifdef CAPTCHA
 
-int main() {
+int main(int argc, char *argv[]) {
+	int outfile;
+
+	if (argc == 1) {
+		outfile = 1;
+	} else if (argc != 2) {
+		fprintf(stderr,"usage: %s <out>\n",argv[0]);
+		return 1;
+	} else {
+		outfile = open(argv[1],O_CREAT|O_WRONLY,S_IRUSR|S_IWUSR);
+
+		if (outfile == -1) {
+			fprintf(2,"failed to open '%s'\n",argv[1]);
+			return 1;
+		}
+	}
+
 	char l[6];
 	unsigned char im[70*200];
 	unsigned char gif[gifsize];
@@ -182,8 +201,13 @@ int main() {
 	captcha(im,l);
 	makegif(im,gif);
 
-	write(1,gif,gifsize);
+	write(outfile,gif,gifsize);
 	write(2,l,5);
+	write(2,"\n",1);
+
+	if (outfile != 1) {
+		close(outfile);
+	}
 
 	return 0;
 }
