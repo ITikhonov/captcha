@@ -99,7 +99,7 @@ static void line(unsigned char im[70*200], unsigned char swr[200], uint8_t s1) {
 	for(x=0;x<199;x++) {
 		if(sk1>=200) sk1=sk1%200;
 		int skew=sw[sk1]/16;
-		sk1+=swr[x]&0x3+1;
+		sk1+=(swr[x]&0x3)+1;
 		unsigned char *i= im+(200*(45+skew)+x);
 		i[0]=0; i[1]=0; i[200]=0; i[201]=0;
 	}
@@ -194,7 +194,7 @@ void captcha(unsigned char im[70*200], unsigned char l[6]) {
 
 void captcha_for_letters(unsigned char _gif[gifsize], unsigned char* letter_ids) {
 	unsigned char swr[200];
-	uint8_t s1,s2;
+	uint8_t s1 = 0,s2 = 0;
 	
 	unsigned char im[70*200];
 	memset(im,0xff,200*70);
