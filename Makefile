@@ -1,31 +1,35 @@
-CFLAGS=-g
+CFLAGS=-g -Iinclude
 
-all: a.gif testlib
+$(shell mkdir -p obj)
 
-testlib: libcaptcha.a
-	gcc -o test test.c libcaptcha.a
-	./test | identify -
+all: res/a.gif testlib
 
-a.gif: captcha	
-	./captcha | identify -
+testlib: bin/libcaptcha.a
+	gcc -o bin/test src/test.c bin/libcaptcha.a
+	bin/test | identify -
 
+res/a.gif: bin/captcha	
+	bin/captcha | identify -
 
-libcaptcha.a: libcaptcha.o
-	ar r libcaptcha.a libcaptcha.o
+bin/libcaptcha.a: obj/libcaptcha.o
+	ar r bin/libcaptcha.a obj/libcaptcha.o
 
-captcha: libcaptcha.c
-	gcc $(CFLAGS) -DCAPTCHA -o captcha libcaptcha.c
+bin/captcha: src/libcaptcha.c
+	gcc $(CFLAGS) -DCAPTCHA -o bin/captcha src/libcaptcha.c
 
-f.h: unfont
-	./unfont > .f.h
-	mv .f.h f.h
+include/f.h: bin/unfont
+	bin/unfont > include/.f.h
+	mv include/.f.h include/f.h
 
-libcaptcha.c: captcha.c f.h
-	(echo "// Version $(VERSION)" && echo '// zlib/libpng license is at the end of this file' && grep -v '^#include "f.h"' captcha.c && cat f.h && echo '/*' && cat LICENSE && echo '*/') > .libcaptcha.c
-	mv .libcaptcha.c libcaptcha.c
+bin/unfont: src/unfont.c
+	gcc $(CFLAGS) -DCAPTCHA -o bin/unfont src/unfont.c
+
+src/libcaptcha.c: src/captcha.c include/f.h
+	(echo "// Version $(VERSION)" && echo '// zlib/libpng license is at the end of this file' && grep -v '^#include "f.h"' src/captcha.c && cat include/f.h && echo '/*' && cat LICENSE && echo '*/') > src/.libcaptcha.c
+	mv src/.libcaptcha.c src/libcaptcha.c
 	
 clean:
-	rm -f captcha libcaptcha.a libcaptcha.o libcaptcha.c test f.h .libcaptcha.c .f.h unfont core
+	rm -f bin/captcha bin/libcaptcha.a obj/libcaptcha.o src/libcaptcha.c bin/test include/f.h src/.libcaptcha.c include/.f.h bin/unfont core
 
 
 publish: clean
