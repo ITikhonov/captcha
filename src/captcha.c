@@ -1,15 +1,9 @@
-
-const int gifsize;
-void captcha(unsigned char im[70*200], unsigned char l[6]);
-void makegif(unsigned char im[70*200], unsigned char gif[gifsize]);
-
-#include <unistd.h>
 #include <stdint.h>
 #include <fcntl.h>
 #include <string.h>
 
-static int8_t *lt[];
-const int gifsize=17646;
+#include "captcha.h"
+#include "f.h"
 
 void makegif(unsigned char im[70*200], unsigned char gif[gifsize]) {
  	// tag ; widthxheight ; GCT:0:0:7 ; bgcolor + aspect // GCT
@@ -104,7 +98,7 @@ static void line(unsigned char im[70*200], unsigned char swr[200], uint8_t s1) {
 	for(x=0;x<199;x++) {
 		if(sk1>=200) sk1=sk1%200;
 		int skew=sw[sk1]/16;
-		sk1+=swr[x]&0x3+1;
+		sk1+=(swr[x]&0x3)+1;
 		unsigned char *i= im+(200*(45+skew)+x);
 		i[0]=0; i[1]=0; i[200]=0; i[201]=0;
 	}
@@ -158,36 +152,31 @@ static void filter(unsigned char im[70*200]) {
 
 static const char *letters="abcdafahijklmnopqrstuvwxyz";
 
-void captcha(unsigned char im[70*200], unsigned char l[6]) {
+//letter indices to letters
+void translate_letter_ids(unsigned char l[6]) {
+	l[0]=letters[l[0]];
+	l[1]=letters[l[1]];
+	l[2]=letters[l[2]];
+	l[3]=letters[l[3]];
+	l[4]=letters[l[4]];
+}
+
+void captcha_for_letters(unsigned char _gif[gifsize], unsigned char* letter_ids) {
 	unsigned char swr[200];
-	uint8_t s1,s2;
-
-	int f=open("/dev/urandom",O_RDONLY);
-	read(f,l,5); read(f,swr,200); read(f,dr,sizeof(dr)); read(f,&s1,1); read(f,&s2,1);
-	close(f);
-
-	memset(im,0xff,200*70); s1=s1&0x7f; s2=s2&0x3f; l[0]%=25; l[1]%=25; l[2]%=25; l[3]%=25; l[4]%=25; l[5]=0;
-	int p=30; p=letter(l[0],p,im,swr,s1,s2); p=letter(l[1],p,im,swr,s1,s2); p=letter(l[2],p,im,swr,s1,s2); p=letter(l[3],p,im,swr,s1,s2); letter(l[4],p,im,swr,s1,s2);
-	dots(im); blur(im); filter(im); line(im,swr,s1); 
-	l[0]=letters[l[0]]; l[1]=letters[l[1]]; l[2]=letters[l[2]]; l[3]=letters[l[3]]; l[4]=letters[l[4]];
-}
-
-#ifdef CAPTCHA
-
-int main() {
-	char l[6];
+	uint8_t s1 = 0,s2 = 0;
+	
 	unsigned char im[70*200];
-	unsigned char gif[gifsize];
+	memset(im,0xff,200*70);
+	s1=s1&0x7f;
+	s2=s2&0x3f;
 
-	captcha(im,l);
-	makegif(im,gif);
+	int p=30;
+	p=letter(letter_ids[0],p,im,swr,s1,s2);
+	p=letter(letter_ids[1],p,im,swr,s1,s2);
+	p=letter(letter_ids[2],p,im,swr,s1,s2);
+	p=letter(letter_ids[3],p,im,swr,s1,s2);
+	letter(letter_ids[4],p,im,swr,s1,s2);
 
-	write(1,gif,gifsize);
-	write(2,l,5);
-
-	return 0;
+	dots(im); blur(im); filter(im); line(im,swr,s1);
+	makegif(im, _gif);
 }
-
-#endif
-
-#include "f.h"

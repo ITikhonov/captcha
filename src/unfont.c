@@ -37,6 +37,7 @@ void copy(int s, int e, int idx) {
 
 }
 
+#ifdef CAPTCHA
 int main() {
 	int i,st=0,idx=0;
 	for(i=0;i<width;i++) {
@@ -54,5 +55,5 @@ int main() {
 	printf("};\n\n");
 	return 0;
 }
-
+#endif
 
